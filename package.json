@@ -199,6 +199,11 @@
                 "description": "%java.debugger.launch.stopOnEntry.description%",
                 "default": true
               },
+              "javaHome": {
+                "type": "string",
+                "description": "Path to an alternative JVM to run on. For example, Java Language Server is running on JDK 8 64-bit, but your app only works on 32-bit",
+                "default": "^\"\\${env:JAVA_HOME}\""
+              },
               "console": {
                 "type": "string",
                 "enum": [

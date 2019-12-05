@@ -20,6 +20,7 @@ export class JavaDebugConfigurationProvider implements vscode.DebugConfiguration
     private isUserSettingsDirty: boolean = true;
     private debugHistory: MostRecentlyUsedHistory = new MostRecentlyUsedHistory();
     private resolver: VariableResolver;
+
     constructor() {
         this.resolver = new VariableResolver();
         vscode.workspace.onDidChangeConfiguration((event) => {
@@ -96,7 +97,7 @@ export class JavaDebugConfigurationProvider implements vscode.DebugConfiguration
     private resolveVariables(folder: vscode.WorkspaceFolder, config: vscode.DebugConfiguration): void {
         // all the properties whose values are string or array of string
         const keys = ["mainClass", "args", "vmArgs", "modulePaths", "classPaths", "projectName",
-            "env", "sourcePaths", "encoding", "cwd", "hostName"];
+            "env", "sourcePaths", "encoding", "cwd", "hostName", "javaHome"];
         if (!config) {
             return;
         }
@@ -132,7 +133,7 @@ export class JavaDebugConfigurationProvider implements vscode.DebugConfiguration
         try {
             if (this.isUserSettingsDirty) {
                 this.isUserSettingsDirty = false;
-                await updateDebugSettings();
+                await updateDebugSettings(config);
             }
 
             /**
@@ -190,6 +191,9 @@ export class JavaDebugConfigurationProvider implements vscode.DebugConfiguration
                         type: Type.USAGEERROR,
                     });
                 }
+                if (!_.isEmpty(config.javaHome) && !fs.existsSync(config.javaHome)) {
+                    config.javaHome = "";
+                }
 
                 // Add the default launch options to the config.
                 config.cwd = config.cwd || _.get(folder, "uri.fsPath");
@@ -200,6 +204,10 @@ export class JavaDebugConfigurationProvider implements vscode.DebugConfiguration
                         type: Type.USAGEERROR,
                         anchor: anchor.ATTACH_CONFIG_ERROR,
                     });
+                }
+                // This doesn't make sense with an attached debugger
+                if (!_.isEmpty(config.javaHome)) {
+                    config.javaHome = "";
                 }
             } else {
                 throw new utility.UserError({
@@ -485,13 +493,13 @@ export class JavaDebugConfigurationProvider implements vscode.DebugConfiguration
     }
 }
 
-async function updateDebugSettings() {
+async function updateDebugSettings(config?: vscode.DebugConfiguration | undefined) {
     const debugSettingsRoot: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration("java.debug");
     if (!debugSettingsRoot) {
         return;
     }
     const logLevel = convertLogLevel(debugSettingsRoot.logLevel || "");
-    const javaHome = await utility.getJavaHome();
+    const javaHome = (config && config.javaHome) ? config.javaHome : await utility.getJavaHome();
     if (debugSettingsRoot.settings && Object.keys(debugSettingsRoot.settings).length) {
         try {
             // tslint:disable-next-line:no-console
