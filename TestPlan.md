@@ -545,3 +545,25 @@ Exception in thread "main" java.lang.IllegalStateException
 1. Open `resolveClasspath` project in VS Code and wait for Java extensions are activated.
 2. Open `kie-client/src/main/java/client/EmbedMain.java` file, and click `Run` or `Debug` CodeLens to launch the application. Check DEBUG CONSOLE view to verify it is launched successfully.
 3. Open `insurance-decision/src/test/java/testscenario/Launch.java` file, and click `Run` or `Debug` CodeLens to launch the application. Check whether the message `Main Class in Test Folder!` is printed in DEBUG CONSOLE view.
+
+## Use the project's Java Runtime to launch the application
+1. Open `11.maven` project in VS Code.
+2. Run `App.java` file, and verify it's launched by the JDK same as your java home.
+3. Install a different JDK in your machine. For example, you java home points to JDK 8, then install a new JDK 13.
+4. Open `pom.xml`, insert the section below and update project configuration. Notice that the modified compiler version should be same as your new JDK.
+```xml
+  <properties>
+    <maven.compiler.target>13</maven.compiler.target>
+    <maven.compiler.source>13</maven.compiler.source>
+  </properties>
+```
+5. Add a new user setting as below.
+```json
+    "java.configuration.runtimes": [
+        {
+            "name": "JavaSE-13",
+            "path": "C:\\Program Files\\Java\\jdk-13.0.1"
+        }
+    ]
+```
+6. Run `App.java` file again, and verify it's launched by the new JDK specified in the user setting.
